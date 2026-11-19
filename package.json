@@ -7,6 +7,11 @@
     "build": "node scripts/bundle.mjs",
     "test": "node tests/run.mjs"
   },
-  "dependencies": { "three": "0.187.0" },
-  "devDependencies": { "esbuild": "0.28.2" }
+  "dependencies": {
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "playwright": "1.65.1"
+  }
 }

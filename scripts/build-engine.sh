@@ -14,6 +14,6 @@ emcc native/engine.c "$LCMS_DIR"/src/*.c -I "$LCMS_DIR/include" \
   -sSTACK_SIZE=1048576 -sSINGLE_FILE=1 \
   '-sEXPORTED_FUNCTIONS=["_malloc","_free","_engine_version","_engine_open","_engine_close","_engine_channels","_engine_sample"]' \
   -o plugin/web/vendor/lcms.mjs
-cp "$LCMS_DIR/COPYING" plugin/web/vendor/LittleCMS-LICENSE.txt
+cp "$LCMS_DIR/LICENSE" plugin/web/vendor/LittleCMS-LICENSE.txt
 curl --fail --location --retry 3 https://raw.githubusercontent.com/emscripten-core/emscripten/4.0.20/LICENSE -o plugin/web/vendor/Emscripten-LICENSE.txt
 printf '%s\n' "$LCMS_SHA" > plugin/web/vendor/LittleCMS-REVISION.txt

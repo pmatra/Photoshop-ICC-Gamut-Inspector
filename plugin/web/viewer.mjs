@@ -29488,6 +29488,7 @@ function interceptControlUp(event) {
 }
 
 // src/viewer.mjs
+var displayColor = (value) => ColorManagement.colorSpaceToWorking(new Color(Math.max(0, Math.min(1, value[0])), Math.max(0, Math.min(1, value[1])), Math.max(0, Math.min(1, value[2]))), SRGBColorSpace);
 var GamutViewer = class {
   constructor(container, onError) {
     this.container = container;
@@ -29578,7 +29579,8 @@ var GamutViewer = class {
       const step = Math.max(1, Math.ceil(d.total / 12e3)), positions = [], colors = [];
       for (let i = 0; i < d.total; i += step) {
         positions.push(d.samples[i * 6 + 1], d.samples[i * 6] - 50, d.samples[i * 6 + 2]);
-        colors.push(d.samples[i * 6 + 3], d.samples[i * 6 + 4], d.samples[i * 6 + 5]);
+        const c = displayColor(d.samples.subarray(i * 6 + 3, i * 6 + 6));
+        colors.push(c.r, c.g, c.b);
       }
       const g = new BufferGeometry();
       g.setAttribute("position", new Float32BufferAttribute(positions, 3));
@@ -29586,9 +29588,14 @@ var GamutViewer = class {
       const m = new PointsMaterial({ size: comparison ? 1.8 : 1.5, vertexColors: !comparison, color: comparison ? 6019583 : 16777215, depthTest: !comparison || !this.xray, transparent: comparison, opacity: comparison ? 0.7 : 1 });
       group.add(new Points(g, m));
     } else {
+      const linearColors = new Float32Array(d.colors.length);
+      for (let i = 0; i < d.colors.length; i += 3) {
+        const c = displayColor(d.colors.subarray(i, i + 3));
+        linearColors.set([c.r, c.g, c.b], i);
+      }
       const g = new BufferGeometry();
       g.setAttribute("position", new BufferAttribute(d.vertices, 3));
-      g.setAttribute("color", new BufferAttribute(d.colors, 3));
+      g.setAttribute("color", new BufferAttribute(linearColors, 3));
       g.computeVertexNormals();
       const m = new MeshBasicMaterial({ vertexColors: !comparison, color: comparison ? 6019583 : 16777215, side: DoubleSide, wireframe: comparison || this.mode === "wire", transparent: comparison, opacity: comparison ? 0.48 : 1, depthTest: !comparison || !this.xray, depthWrite: !comparison });
       const mesh = new Mesh(g, m);

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const displayColor=value=>THREE.ColorManagement.colorSpaceToWorking(new THREE.Color(Math.max(0,Math.min(1,value[0])),Math.max(0,Math.min(1,value[1])),Math.max(0,Math.min(1,value[2]))),THREE.SRGBColorSpace);
 export class GamutViewer {
   constructor(container,onError){
     this.container=container;this.data={};this.meshes={};this.mode='surface';this.xray=true;this.pending=false;
@@ -23,11 +24,12 @@ export class GamutViewer {
     const group=new THREE.Group(),comparison=slot==='comparison';this.meshes[slot]=group;this.scene.add(group);
     if(this.mode==='points'||!d.vertices.length){
       const step=Math.max(1,Math.ceil(d.total/12000)),positions=[],colors=[];
-      for(let i=0;i<d.total;i+=step){positions.push(d.samples[i*6+1],d.samples[i*6]-50,d.samples[i*6+2]);colors.push(d.samples[i*6+3],d.samples[i*6+4],d.samples[i*6+5]);}
+      for(let i=0;i<d.total;i+=step){positions.push(d.samples[i*6+1],d.samples[i*6]-50,d.samples[i*6+2]);const c=displayColor(d.samples.subarray(i*6+3,i*6+6));colors.push(c.r,c.g,c.b);}
       const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
       const m=new THREE.PointsMaterial({size:comparison?1.8:1.5,vertexColors:!comparison,color:comparison?0x5bd9ff:0xffffff,depthTest:!comparison||!this.xray,transparent:comparison,opacity:comparison?0.7:1});group.add(new THREE.Points(g,m));
     }else{
-      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(d.vertices,3));g.setAttribute('color',new THREE.BufferAttribute(d.colors,3));g.computeVertexNormals();
+      const linearColors=new Float32Array(d.colors.length);for(let i=0;i<d.colors.length;i+=3){const c=displayColor(d.colors.subarray(i,i+3));linearColors.set([c.r,c.g,c.b],i);}
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(d.vertices,3));g.setAttribute('color',new THREE.BufferAttribute(linearColors,3));g.computeVertexNormals();
       const m=new THREE.MeshBasicMaterial({vertexColors:!comparison,color:comparison?0x5bd9ff:0xffffff,side:THREE.DoubleSide,wireframe:comparison||this.mode==='wire',transparent:comparison,opacity:comparison?0.48:1,depthTest:!comparison||!this.xray,depthWrite:!comparison});const mesh=new THREE.Mesh(g,m);mesh.renderOrder=comparison?2:0;group.add(mesh);
     }
     this.draw();
