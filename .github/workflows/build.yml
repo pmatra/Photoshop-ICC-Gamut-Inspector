@@ -21,6 +21,10 @@ jobs:
           npm ci
           npm run build
           node tests/run.mjs
+      - name: Browser panel regression checks
+        run: |
+          npx playwright install --with-deps chromium
+          node tests/browser.mjs
       - name: Package developer plugin
         run: python3 scripts/package.py
       - uses: actions/upload-artifact@v4
@@ -30,3 +34,11 @@ jobs:
             dist/*.zip
             dist/*.txt
           if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: engine-and-check-results
+          path: |
+            plugin/web/vendor/
+            tests/fixtures/*.icc
+            dist/*.png

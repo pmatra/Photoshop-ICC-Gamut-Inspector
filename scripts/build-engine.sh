@@ -13,7 +13,10 @@ emcc native/engine.c "$LCMS_DIR"/src/*.c -I "$LCMS_DIR/include" \
   -sFILESYSTEM=0 -sALLOW_MEMORY_GROWTH=1 -sMAXIMUM_MEMORY=268435456 \
   -sSTACK_SIZE=1048576 -sSINGLE_FILE=1 \
   '-sEXPORTED_FUNCTIONS=["_malloc","_free","_engine_version","_engine_open","_engine_close","_engine_channels","_engine_sample"]' \
+  '-sEXPORTED_RUNTIME_METHODS=["HEAPU8","HEAPF32"]' \
   -o plugin/web/vendor/lcms.mjs
 cp "$LCMS_DIR/LICENSE" plugin/web/vendor/LittleCMS-LICENSE.txt
 curl --fail --location --retry 3 https://raw.githubusercontent.com/emscripten-core/emscripten/4.0.20/LICENSE -o plugin/web/vendor/Emscripten-LICENSE.txt
 printf '%s\n' "$LCMS_SHA" > plugin/web/vendor/LittleCMS-REVISION.txt
+cc tests/fixtures.c "$LCMS_DIR"/src/*.c -I "$LCMS_DIR/include" -DCMS_NO_PTHREADS -lm -o .build/fixtures
+.build/fixtures

@@ -1,0 +1,43 @@
+import {chromium} from 'playwright';
+import {createServer} from 'node:http';
+import {readFile,stat,mkdir} from 'node:fs/promises';
+import {resolve,extname} from 'node:path';
+import assert from 'node:assert/strict';
+const root=resolve('.'),mime={'.html':'text/html','.mjs':'text/javascript','.js':'text/javascript','.css':'text/css','.icc':'application/octet-stream'};
+const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+decodeURIComponent(req.url.split('?')[0]));if(!path.startsWith(root+'/')&&!path.startsWith(root+'\\'))throw Error('path');const f=(await stat(path)).isDirectory()?resolve(path,'index.html'):path;res.setHeader('Content-Type',mime[extname(f)]||'application/octet-stream');res.end(await readFile(f));}catch{res.writeHead(404);res.end();}});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||undefined,args:['--enable-unsafe-swiftshader']});
+try{
+  const page=await browser.newPage({viewport:{width:1050,height:980}}),errors=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  await page.addInitScript(()=>{
+    window.hostMessages=[];window.hostReply=message=>{const e=new MessageEvent('message',{data:{namespace:'icc-inspector',...message}});Object.defineProperty(e,'source',{value:window.uxpHost});window.dispatchEvent(e);};
+    window.uxpHost={postMessage:m=>{window.hostMessages.push(m);if(m.type==='ready')setTimeout(()=>{window.hostReply({type:'settings',values:{}});window.hostReply({type:'document',name:'Test.psd',profile:'sRGB IEC61966-2.1',mode:'RGB'});},0);}};
+  });
+  await page.goto(`http://127.0.0.1:${server.address().port}/plugin/web/`);
+  await page.waitForFunction(()=>window.hostMessages.some(m=>m.type==='ready'));
+  const bytes=Array.from(await readFile('tests/fixtures/srgb.icc'));
+  await page.evaluate(bytes=>window.hostReply({type:'profile',slot:'primary',name:'sRGB.icc',bytes}),bytes);
+  await page.waitForFunction(()=>document.querySelector('#statistics').textContent.includes('LittleCMS'),{timeout:60000});
+  assert.match(await page.locator('#statistics').innerText(),/729 full samples/);
+  await page.evaluate(bytes=>window.hostReply({type:'profile',slot:'comparison',name:'Comparison.icc',bytes}),bytes);
+  await page.waitForFunction(()=>document.querySelector('#statistics').textContent.includes('comparison'));
+  assert.match(await page.locator('#comparisonLegend').innerText(),/Comparison.icc.*X-ray/);
+  await page.selectOption('#renderMode','points');await page.uncheck('#xray');await page.click('#reset');
+  await page.click('#export');assert.ok(await page.evaluate(()=>window.hostMessages.find(m=>m.type==='export')?.csv.split('\n').length===732));
+  await page.click('#settingsButton');await page.selectOption('#theme','light');assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
+  await page.selectOption('#renderMode','surface');await page.check('#xray');
+  await mkdir('dist',{recursive:true});await page.screenshot({path:'dist/inspector.png',fullPage:true});
+  await page.click('#listTab');
+  await page.evaluate(bytes=>{window.hostReply({type:'directoryStart',path:'Test profiles'});window.hostReply({type:'directoryBatch',entries:[{id:'a',name:'Alpha.icc',path:'/a',bytes},{id:'b',name:'Beta.icc',path:'/b',bytes},{id:'c',name:'<img src=x onerror=alert(1)>.icc',path:'/c',bytes}]});window.hostReply({type:'directoryEnd'});},bytes);
+  await page.getByLabel('Select Alpha.icc',{exact:true}).check();await page.click('#newCategory');await page.fill('#categoryName','Matte Paper');await page.click('#categoryConfirm');
+  assert.ok(await page.locator('.category').first().innerText().then(t=>t.includes('Alpha.icc')));
+  await page.locator('.category').first().getByText('Rename',{exact:true}).click();await page.fill('#categoryName','Fine Art');await page.click('#categoryConfirm');
+  assert.match(await page.locator('.category').first().innerText(),/Fine Art/);
+  await page.selectOption('#sort','name');await page.click('#sortDirection');await page.fill('#search','beta');assert.equal(await page.locator('tbody tr').count(),1);await page.fill('#search','');
+  await page.locator('.category').first().getByText('Remove',{exact:true}).click();await page.click('#categoryConfirm');assert.equal(await page.locator('.category').count(),1);assert.equal(await page.locator('tbody tr').count(),3);
+  assert.equal(await page.locator('#profiles img').count(),0);
+  await page.setViewportSize({width:480,height:740});await page.screenshot({path:'dist/profile-list.png',fullPage:true});
+  assert.deepEqual(errors,[]);
+  console.log('Browser: GPU draw, sampling worker, comparison/X-ray, export, themes, category CRUD, filtering, sorting, safe text and narrow layout passed');
+}finally{await browser.close();server.close();}

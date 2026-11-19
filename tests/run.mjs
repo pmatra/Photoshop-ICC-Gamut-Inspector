@@ -25,3 +25,13 @@ renameCategory(settings,'Paper','Matte');assert.equal(settings.membership.a,'Mat
 removeCategory(settings,'Matte');assert.equal(visibleRows(rows,settings,'Uncategorized')[0].name,'one');
 assert.equal(rows.length,2);assert.equal(Object.keys(settings.membership).length,0);
 console.log('Category rename/removal, filtering, saved sorting, settings validation: passed');
+for(const [name,channels] of [['gray',1],['synthetic-cmyk',4]]){
+  const bytes=new Uint8Array(await readFile(new URL(`./fixtures/${name}.icc`,import.meta.url)));
+  const meta=parseICC(bytes);for(const tag of meta.tags)decodeTag(bytes,tag);
+  const s=engine.open(bytes,0),total=5**channels;assert.equal(s.channels,channels);
+  const values=s.sample(5,0,total);assert.ok(Array.from(values).every(Number.isFinite));
+  if(channels===4){assert.ok(values[0]>98,'CMYK zero ink should be white');assert.ok(values[(total-1)*6]<1,'CMYK full ink should be black');}
+  else{assert.ok(values[0]<1);assert.ok(values[(total-1)*6]>99);}
+  s.close();
+}
+console.log('Synthetic Gray and CMYK forward transforms and ink scaling: passed');
