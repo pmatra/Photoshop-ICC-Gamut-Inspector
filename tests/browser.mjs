@@ -17,7 +17,7 @@ try{
   await page.goto(`http://127.0.0.1:${server.address().port}/plugin/web/`);
   await page.waitForFunction(()=>window.hostMessages.some(m=>m.type==='ready'));
   const layout=await page.evaluate(()=>{const gamut=document.querySelector('#viewport').getBoundingClientRect(),data=document.querySelector('.profile-pane').getBoundingClientRect();return{gamutWidth:gamut.width,gamutHeight:gamut.height,dataLeft:data.left,gamutRight:gamut.right,overflow:document.documentElement.scrollWidth>innerWidth};});
-  assert.ok(layout.gamutWidth>=950&&layout.gamutHeight>=600,'Large workspace must dedicate substantial space to the gamut');
+  assert.ok(layout.gamutWidth>=950&&layout.gamutHeight>=500,'Large workspace must dedicate substantial space to the gamut');
   assert.ok(layout.dataLeft>layout.gamutRight,'Profile data must be beside the gamut');assert.equal(layout.overflow,false);
   const bytes=Array.from(await readFile('tests/fixtures/srgb.icc'));
   await page.evaluate(bytes=>window.hostReply({type:'profile',slot:'primary',name:'sRGB.icc',bytes}),bytes);

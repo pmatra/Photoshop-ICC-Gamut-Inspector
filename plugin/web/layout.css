@@ -1,12 +1,20 @@
 /* Keep the gamut and ICC data visible together in a floating workspace. */
+body{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+body>header,body>nav,body>#notice,body>#settings{flex-shrink:0}
+#inspectPage{display:flex;flex-direction:column;flex:1;min-height:0}
+#inspectPage>.toolbar,#inspectPage>.document{flex-shrink:0}
 .inspector-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
-.gamut-pane,.profile-pane{min-width:0}
-#viewport{height:clamp(460px,calc(100vh - 355px),1400px)}
+.inspector-layout{flex:1;min-height:0;align-items:stretch}
+.gamut-pane,.profile-pane{min-width:0;min-height:0}
+.gamut-pane{display:flex;flex-direction:column}
+#viewport{height:auto;min-height:250px;flex:1}
+#legend,#statistics{flex-shrink:0}
+.profile-pane{overflow:auto}
 .profile-pane details:first-child{margin-top:0}
 .profile-pane dl{grid-template-columns:110px minmax(0,1fr)}
 .profile-pane select{max-width:100%}
 .profile-pane pre{max-height:calc(100vh - 650px);min-height:130px}
-#listPage{padding:18px}
+#listPage{padding:18px;flex:1;min-height:0;overflow:auto}
 .category table{font-size:13px}
 .category th,.category td{padding:10px 9px}
 .category th:first-child{width:38px}
@@ -19,6 +27,8 @@
   .profile-pane dl{grid-template-columns:90px minmax(0,1fr)}
 }
 @media(max-width:799px){
+  body{height:auto;display:block;overflow:auto}
+  #inspectPage{display:block}
   .inspector-layout{grid-template-columns:minmax(0,1fr)}
   #viewport{height:max(400px,55vh)}
   .profile-pane pre{max-height:400px}
