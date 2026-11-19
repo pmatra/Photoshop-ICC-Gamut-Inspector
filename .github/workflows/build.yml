@@ -1,0 +1,32 @@
+name: Build and check plugin
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compile pinned LittleCMS to WebAssembly
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src emscripten/emsdk:4.0.20 bash scripts/build-engine.sh
+      - name: Regression checks
+        run: |
+          npm ci
+          npm run build
+          node tests/run.mjs
+      - name: Package developer plugin
+        run: python3 scripts/package.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Photoshop-ICC-Gamut-Inspector-development
+          path: |
+            dist/*.zip
+            dist/*.txt
+          if-no-files-found: error

@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {createSampler} from '../plugin/web/engine.mjs';
+import {parseICC,decodeTag} from '../plugin/web/icc.mjs';
+import {cleanSettings,visibleRows,removeCategory,renameCategory} from '../plugin/web/catalog.mjs';
+const bytes=new Uint8Array(await readFile(new URL('./fixtures/srgb.icc',import.meta.url)));
+const meta=parseICC(bytes); assert.equal(meta.colorSpace,'RGB');assert.ok(meta.tags.length>0);
+for(const tag of meta.tags)decodeTag(bytes,tag);
+assert.throws(()=>parseICC(new Uint8Array(131)),/132/);
+const bad=bytes.slice();new DataView(bad.buffer).setUint32(128,0xffffffff);assert.throws(()=>parseICC(bad),/table/);
+const bounds=bytes.slice();new DataView(bounds.buffer).setUint32(136,bytes.length);assert.throws(()=>parseICC(bounds),/bounds/);
+const engine=await createSampler();assert.equal(engine.version,2200);
+const s=engine.open(bytes);assert.equal(s.channels,3);
+const samples=s.sample(3,0,27);
+assert.ok(Math.abs(samples[0])<0.01);assert.ok(Math.abs(samples[26*6]-100)<0.02);
+// Channel 0 varies fastest: sample 2 is sRGB red, relative-colorimetric D50 Lab.
+assert.ok(Math.abs(samples[12]-54.29)<0.2);assert.ok(Math.abs(samples[13]-80.81)<0.2);assert.ok(Math.abs(samples[14]-69.89)<0.2);
+assert.throws(()=>s.sample(99,0,1),/range/);s.close();s.close();assert.throws(()=>s.sample(3,0,1),/closed/);
+console.log('ICC bounds, tag decoding, WASM engine, D50 black/white/red anchors, lifecycle: passed');
+const settings=cleanSettings({categories:['Paper','Paper','Uncategorized'],membership:{a:'Paper',b:'Missing'},sort:{column:'version',direction:-1}});
+assert.deepEqual(settings.categories,['Paper']);assert.deepEqual(settings.membership,{a:'Paper'});
+const rows=[{path:'a',name:'one',meta:{version:'4.3',colorSpace:'CMYK'}},{path:'b',name:'two',meta:{version:'2.1',colorSpace:'RGB'}}];
+assert.equal(visibleRows(rows,settings,'Paper','cmyk').length,1);
+renameCategory(settings,'Paper','Matte');assert.equal(settings.membership.a,'Matte');
+removeCategory(settings,'Matte');assert.equal(visibleRows(rows,settings,'Uncategorized')[0].name,'one');
+assert.equal(rows.length,2);assert.equal(Object.keys(settings.membership).length,0);
+console.log('Category rename/removal, filtering, saved sorting, settings validation: passed');
