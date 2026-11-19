@@ -35,6 +35,6 @@ export class GamutViewer {
     this.draw();
   }
   configure(mode,xray){this.mode=mode;this.xray=xray;for(const slot of Object.keys(this.data))this.rebuild(slot);}
-  reset(){this.camera.position.set(220,160,250);this.controls.target.set(0,0,0);this.controls.update();this.draw();}
+  reset(){if(!this.renderer)return;this.camera.position.set(220,160,250);this.controls.target.set(0,0,0);this.controls.update();this.draw();}
   draw(){if(this.pending||!this.renderer)return;this.pending=true;requestAnimationFrame(()=>{this.pending=false;this.renderer.render(this.scene,this.camera);});}
 }

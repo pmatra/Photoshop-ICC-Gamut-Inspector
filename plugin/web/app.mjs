@@ -17,7 +17,8 @@ worker.onmessage=({data:d})=>{
   if(d.type==='result'){
     results[d.slot]=d;viewer.set(d.slot,d);$('export').disabled=!results.primary;
     const p=results.primary,c=results.comparison;
-    $('statistics').textContent=p?`${p.total.toLocaleString()} full samples · hull ${Math.round(p.volume).toLocaleString()} Lab³${c?` · comparison ${Math.round(c.volume).toLocaleString()} Lab³`:''} · LittleCMS ${p.engineVersion/1000} · D50 CIELAB`:'';
+    const version=p?`${Math.floor(p.engineVersion/1000)}.${Math.floor(p.engineVersion%1000/10)}${p.engineVersion%10?'.'+p.engineVersion%10:''}`:'';
+    $('statistics').textContent=p?`${p.total.toLocaleString()} full samples · hull ${Math.round(p.volume).toLocaleString()} Lab³${c?` · comparison ${Math.round(c.volume).toLocaleString()} Lab³`:''} · LittleCMS ${version} · D50 CIELAB`:'';
     notice(d.hullError||'Ready. Drag to orbit; scroll to zoom. Display points are decimated; CSV retains every sample.');legend();
   }
 };

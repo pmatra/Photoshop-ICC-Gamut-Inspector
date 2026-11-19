@@ -29610,6 +29610,7 @@ var GamutViewer = class {
     for (const slot of Object.keys(this.data)) this.rebuild(slot);
   }
   reset() {
+    if (!this.renderer) return;
     this.camera.position.set(220, 160, 250);
     this.controls.target.set(0, 0, 0);
     this.controls.update();

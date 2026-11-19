@@ -31,11 +31,13 @@ try{
   await page.click('#listTab');
   await page.evaluate(bytes=>{window.hostReply({type:'directoryStart',path:'Test profiles'});window.hostReply({type:'directoryBatch',entries:[{id:'a',name:'Alpha.icc',path:'/a',bytes},{id:'b',name:'Beta.icc',path:'/b',bytes},{id:'c',name:'<img src=x onerror=alert(1)>.icc',path:'/c',bytes}]});window.hostReply({type:'directoryEnd'});},bytes);
   await page.getByLabel('Select Alpha.icc',{exact:true}).check();await page.click('#newCategory');await page.fill('#categoryName','Matte Paper');await page.click('#categoryConfirm');
+  await page.waitForFunction(()=>document.querySelector('.category .category-name')?.textContent.includes('Matte Paper'));
   assert.ok(await page.locator('.category').first().innerText().then(t=>t.includes('Alpha.icc')));
   await page.locator('.category').first().getByText('Rename',{exact:true}).click();await page.fill('#categoryName','Fine Art');await page.click('#categoryConfirm');
+  await page.waitForFunction(()=>document.querySelector('.category .category-name')?.textContent.includes('Fine Art'));
   assert.match(await page.locator('.category').first().innerText(),/Fine Art/);
   await page.selectOption('#sort','name');await page.click('#sortDirection');await page.fill('#search','beta');assert.equal(await page.locator('tbody tr').count(),1);await page.fill('#search','');
-  await page.locator('.category').first().getByText('Remove',{exact:true}).click();await page.click('#categoryConfirm');assert.equal(await page.locator('.category').count(),1);assert.equal(await page.locator('tbody tr').count(),3);
+  await page.locator('.category').first().getByText('Remove',{exact:true}).click();await page.click('#categoryConfirm');await page.waitForFunction(()=>document.querySelectorAll('.category').length===1);assert.equal(await page.locator('.category').count(),1);assert.equal(await page.locator('tbody tr').count(),3);
   assert.equal(await page.locator('#profiles img').count(),0);
   await page.setViewportSize({width:480,height:740});await page.screenshot({path:'dist/profile-list.png',fullPage:true});
   assert.deepEqual(errors,[]);

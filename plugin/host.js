@@ -22,8 +22,14 @@ function saveSettings(values){
   const text=JSON.stringify({schema:1,values});settings=JSON.parse(text).values;
   saveQueue=saveQueue.catch(()=>{}).then(async()=>{
     JSON.parse(text);
-    let old;
-    try{old=await settingsFolder.getEntry('settings.json');const contents=await old.read();const parsed=JSON.parse(contents);if(parsed.schema===1){const backup=await settingsFolder.createFile('settings.backup.json',{overwrite:true});await backup.write(contents);}}catch(e){if(old)send('notice',{message:'Previous settings are malformed; backup was preserved.'});}
+    let old,contents,valid=false;
+    try{old=await settingsFolder.getEntry('settings.json');}catch(e){if(!String(e.message).match(/not exist|not found|could not find/i))throw e;}
+    if(old){
+      contents=await old.read();
+      try{const parsed=JSON.parse(contents);valid=parsed.schema===1&&typeof parsed.values==='object';}catch{}
+      if(valid){const backup=await settingsFolder.createFile('settings.backup.json',{overwrite:true});await backup.write(contents);}
+      else{const recovery=await settingsFolder.createFile(`settings.malformed-${Date.now()}.json`,{overwrite:false});await recovery.write(contents);send('notice',{message:'Malformed settings preserved in a recovery copy; backup was retained.'});}
+    }
     const temp=await settingsFolder.createFile('settings.pending.json',{overwrite:true});await temp.write(text);
     await temp.moveTo(settingsFolder,{newName:'settings.json',overwrite:true});
   }).catch(e=>send('error',{message:`Could not save settings: ${e.message}`}));
