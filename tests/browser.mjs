@@ -8,7 +8,7 @@ const server=createServer(async(req,res)=>{try{const path=resolve(root,'.'+decod
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||undefined,args:['--enable-unsafe-swiftshader']});
 try{
-  const page=await browser.newPage({viewport:{width:1050,height:980}}),errors=[];
+  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{
     window.hostMessages=[];window.hostReply=message=>{const e=new MessageEvent('message',{data:{namespace:'icc-inspector',...message}});Object.defineProperty(e,'source',{value:window.uxpHost});window.dispatchEvent(e);};
@@ -16,6 +16,9 @@ try{
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/plugin/web/`);
   await page.waitForFunction(()=>window.hostMessages.some(m=>m.type==='ready'));
+  const layout=await page.evaluate(()=>{const gamut=document.querySelector('#viewport').getBoundingClientRect(),data=document.querySelector('.profile-pane').getBoundingClientRect();return{gamutWidth:gamut.width,gamutHeight:gamut.height,dataLeft:data.left,gamutRight:gamut.right,overflow:document.documentElement.scrollWidth>innerWidth};});
+  assert.ok(layout.gamutWidth>=950&&layout.gamutHeight>=600,'Large workspace must dedicate substantial space to the gamut');
+  assert.ok(layout.dataLeft>layout.gamutRight,'Profile data must be beside the gamut');assert.equal(layout.overflow,false);
   const bytes=Array.from(await readFile('tests/fixtures/srgb.icc'));
   await page.evaluate(bytes=>window.hostReply({type:'profile',slot:'primary',name:'sRGB.icc',bytes}),bytes);
   await page.waitForFunction(()=>document.querySelector('#statistics').textContent.includes('LittleCMS'),{timeout:60000});

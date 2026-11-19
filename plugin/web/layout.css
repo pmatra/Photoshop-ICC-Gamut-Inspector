@@ -1,0 +1,27 @@
+/* Keep the gamut and ICC data visible together in a floating workspace. */
+.inspector-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
+.gamut-pane,.profile-pane{min-width:0}
+#viewport{height:clamp(460px,calc(100vh - 355px),1400px)}
+.profile-pane details:first-child{margin-top:0}
+.profile-pane dl{grid-template-columns:110px minmax(0,1fr)}
+.profile-pane select{max-width:100%}
+.profile-pane pre{max-height:calc(100vh - 650px);min-height:130px}
+#listPage{padding:18px}
+.category table{font-size:13px}
+.category th,.category td{padding:10px 9px}
+.category th:first-child{width:38px}
+.category th:nth-child(3){width:85px}
+.category th:nth-child(4){width:125px}
+.category th:last-child{width:175px}
+.category th{white-space:nowrap}
+@media(max-width:1099px){
+  .inspector-layout{grid-template-columns:minmax(0,1fr) 300px;gap:12px}
+  .profile-pane dl{grid-template-columns:90px minmax(0,1fr)}
+}
+@media(max-width:799px){
+  .inspector-layout{grid-template-columns:minmax(0,1fr)}
+  #viewport{height:max(400px,55vh)}
+  .profile-pane pre{max-height:400px}
+  .category{overflow-x:auto}
+  .category table{min-width:720px}
+}

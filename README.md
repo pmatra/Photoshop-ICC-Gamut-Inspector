@@ -22,7 +22,9 @@ A self-contained Adobe Photoshop UXP panel for inspecting ICC profiles and compa
 1. Download and unpack the developer ZIP from a successful Actions run (or build from source).
 2. Install Adobe's **UXP Developer Tool** from Creative Cloud. Enable developer mode in Photoshop's Plugins preferences, then restart Photoshop if requested.
 3. In UXP Developer Tool, choose **Add Plugin**, select the unpacked `manifest.json`, then **Load**.
-4. Open **Plugins → ICC / Gamut Inspector**. A wider floating panel works best for profile comparisons.
+4. Open **Plugins → ICC / Gamut Inspector**. The preferred floating workspace is 1440 × 1000, with a 900 × 700 minimum. Drag the panel tab out of its dock to float it, then resize using its window edge. Photoshop may retain a previous panel size after an update; unload/reload the plugin and enlarge the floating panel if necessary.
+
+The inspector places the 3D gamut and profile data side by side in the larger workspace. The profile list uses the full panel width, with wider attribute columns.
 
 The ZIP is an unpacked developer plugin, not a CCX installer. Adobe UXP Developer Tool can package a CCX; distributing through Adobe Marketplace additionally requires Adobe's plugin registration/review process. The manifest ID is a development identifier and must be replaced with an Adobe-issued plugin ID before Marketplace submission.
 
