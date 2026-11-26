@@ -17,16 +17,19 @@ A self-contained Adobe Photoshop UXP panel for inspecting ICC profiles and compa
 - System font, shaded buttons and category headers, light/dark/system themes.
 - Plugin-scoped settings and remembered directory access, with serialized writes and a last valid backup.
 
-## Install for development
+## Install in Photoshop
 
-1. Download and unpack the developer ZIP from a successful Actions run (or build from source).
-2. Install Adobe's **UXP Developer Tool** from Creative Cloud. Enable developer mode in Photoshop's Plugins preferences, then restart Photoshop if requested.
-3. In UXP Developer Tool, choose **Add Plugin**, select the unpacked `manifest.json`, then **Load**.
-4. Open **Plugins → ICC / Gamut Inspector**. The preferred floating workspace is 480 × 850, with a 360 × 520 minimum. Drag the panel tab out of its dock to float it, then resize using its window edge. Photoshop may retain a previous panel size after an update; unload/reload the plugin and enlarge the floating panel if necessary.
+You’ll need **Photoshop 28.0 or newer** on Windows or macOS and **Adobe UXP Developer Tools**. This GitHub release is a developer package that you load from an extracted folder.
 
-The inspector stacks the 3D gamut and profile data in a narrow panel. At 850 pixels or wider, it places them side by side.
+1. Open [GitHub Releases](https://github.com/pmatra/Photoshop-ICC-Gamut-Inspector/releases). Under **Assets**, download the file ending in `-developer.zip` and extract the whole archive to a folder you can keep. The extracted folder should contain `manifest.json` and a `web` folder.
+2. In the **Adobe Creative Cloud** desktop app, find **UXP Developer Tools** under **All apps** and install it. Open UXP Developer Tools and click **Enable** if it prompts you to turn on Developer Mode. Approve the system prompt if shown.
+3. Open Photoshop. In **Plugins** preferences, enable **Developer Mode**, then restart Photoshop if prompted. You’ll find Preferences under **Edit** on Windows or under **Photoshop** on macOS.
+4. Leave Photoshop running and switch to **UXP Developer Tools**. Confirm that Photoshop appears under **Connected Apps**. Click **Add Plugin**, select the extracted `manifest.json`, then choose **Load** from the plugin’s **Actions** menu.
+5. In Photoshop, choose **Plugins → ICC / Gamut Inspector**. Click **Open Profile** to inspect an `.icc` or `.icm` file, or use **Profile List → Open Directory** to browse a folder.
 
-The ZIP is an unpacked developer plugin, not a CCX installer. Adobe UXP Developer Tool can package a CCX; distributing through Adobe Marketplace additionally requires Adobe's plugin registration/review process. The manifest ID is a development identifier and must be replaced with an Adobe-issued plugin ID before Marketplace submission.
+If Photoshop doesn’t appear in Connected Apps, confirm Developer Mode is enabled in both apps, then quit and reopen them. [Adobe’s UXP Developer Tool walkthrough](https://developer.adobe.com/photoshop/uxp/2022/guides/devtool/udt-walkthrough/)
+
+To update, unload the existing plugin in UXP Developer Tools, then add and load the `manifest.json` from the newly extracted release. Photoshop may remember the panel’s previous size. Drag the panel tab out of the dock to float it and resize it from the edge.
 
 ## Profile directory permissions
 
