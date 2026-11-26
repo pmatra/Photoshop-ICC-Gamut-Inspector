@@ -5,9 +5,13 @@ export class GamutViewer {
   constructor(container,onError){
     this.container=container;this.data={};this.meshes={};this.mode='surface';this.xray=true;this.pending=false;
     try{this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});}catch(e){onError(`WebGL unavailable: ${e.message}`);return;}
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio*1.5,3));this.renderer.setClearColor(0x202329);container.append(this.renderer.domElement);
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));this.renderer.setClearColor(0x202329);container.append(this.renderer.domElement);
     this.renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();onError('GPU context lost. Reopen the panel to restore the viewer.');});
     this.scene=new THREE.Scene();this.camera=new THREE.PerspectiveCamera(40,1,0.1,2000);this.camera.position.set(220,160,250);
+    const canvas = this.renderer.domElement;
+    canvas.addEventListener('wheel', event => {
+      if (!event.ctrlKey && !event.metaKey) event.stopImmediatePropagation();
+    }, {capture: true});
     this.controls=new OrbitControls(this.camera,this.renderer.domElement);this.controls.enableDamping=false;this.controls.addEventListener('change',()=>this.draw());
     const grid=new THREE.GridHelper(240,12,0x606875,0x363c44);grid.position.y=-50;this.scene.add(grid);
     this.scene.add(new THREE.AxesHelper(110));
@@ -15,7 +19,7 @@ export class GamutViewer {
     new ResizeObserver(()=>this.resize()).observe(container);this.resize();
   }
   label(text,pos){const canvas=document.createElement('canvas');canvas.width=128;canvas.height=64;const ctx=canvas.getContext('2d');ctx.font='bold 40px system-ui';ctx.fillStyle='#dddddd';ctx.textAlign='center';ctx.fillText(text,64,46);const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),depthTest:false}));sprite.position.set(...pos);sprite.scale.set(25,12.5,1);this.scene.add(sprite);}
-  resize(){if(!this.renderer)return;const w=this.container.clientWidth,h=this.container.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.draw();}
+  resize(){if(!this.renderer)return;const w=this.container.clientWidth,h=this.container.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.draw();}
   set(slot,result){this.data[slot]=result;this.rebuild(slot);}
   clear(slot){this.dispose(slot);delete this.data[slot];this.draw();}
   dispose(slot){const group=this.meshes[slot];if(!group)return;group.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});this.scene.remove(group);delete this.meshes[slot];}

@@ -53,6 +53,51 @@ function documentInfo(){
   try{const doc=app.activeDocument;send('document',{name:doc.title||doc.name||'Untitled',profile:doc.colorProfileName||'None',mode:String(doc.mode)});}
   catch{send('document',{name:'No open document',profile:'',mode:''});}
 }
+const releasesEndpoint = 'https://api.github.com/repos/pmatra/Photoshop-ICC-Gamut-Inspector/releases?per_page=100';
+let installedVersion;
+
+async function readVersion() {
+  const pluginFolder = await fs.getPluginFolder();
+  const manifest = await pluginFolder.getEntry('manifest.json');
+  installedVersion = JSON.parse(await manifest.read()).version;
+  send('version', {version: installedVersion});
+}
+
+function versionParts(value) {
+  const match = /^v?(\d+)\.(\d+)\.(\d+)$/.exec(value);
+  return match?.slice(1).map(Number);
+}
+
+function compareVersions(left, right) {
+  return left.map((part, index) => part - right[index]).find(value => value !== 0) ?? 0;
+}
+
+async function checkUpdate() {
+  try {
+    if (!installedVersion) await readVersion();
+    const current = versionParts(installedVersion);
+    if (!current) throw Error('The installed version could not be read.');
+    const response = await fetch(releasesEndpoint, {headers: {Accept: 'application/vnd.github+json'}});
+    if (!response.ok) throw Error(`GitHub returned HTTP ${response.status}.`);
+    const releases = await response.json();
+    const versions = releases.filter(release => !release.draft)
+      .map(release => versionParts(release.tag_name)).filter(Boolean);
+    versions.sort((left, right) => compareVersions(right, left));
+    const latest = versions[0];
+    if (!latest) {
+      send('updateStatus', {message: 'No published release was found on GitHub.'});
+      return;
+    }
+    send('updateStatus', {
+      message: compareVersions(latest, current) > 0
+        ? `Version ${latest.join('.')} is available on GitHub.`
+        : 'You have the latest published version.'
+    });
+  } catch (error) {
+    send('updateStatus', {message: `Could not check for updates. ${error.message}`});
+  }
+}
+
 const initialized=readSettings();
 window.addEventListener('message',async event=>{
   if(event.source!==view||event.data?.namespace!=='icc-inspector')return;
@@ -61,12 +106,14 @@ window.addEventListener('message',async event=>{
     await initialized;
     switch(message.type){
       case 'ready':viewReady=true;for(const message of pending.splice(0))view.postMessage(message);send('settings',{values:settings});documentInfo();
+        readVersion().catch(()=>{});
         if(settings.directoryToken){try{await listFolder(await fs.getEntryForPersistentToken(settings.directoryToken));}catch(e){send('error',{message:'Saved directory is unavailable. Choose Open Directory to grant access again.'});}}
         break;
       case 'open':{const file=await fs.getFileForOpening({types:['icc','icm'],allowMultiple:false});if(file)await loadFile(file,message.slot==='comparison'?'comparison':'primary');break;}
       case 'directory':{const chosen=await fs.getFolder();if(chosen){if(message.makeDefault){const token=await fs.createPersistentToken(chosen);saveSettings({...settings,directoryToken:token,directoryPath:chosen.nativePath});}await listFolder(chosen);}break;}
       case 'refresh':if(folder)await listFolder(folder);else send('error',{message:'Choose a directory first.'});break;
       case 'load':{const entry=files.get(message.id);if(!entry)throw Error('This profile list is stale. Refresh and select it again.');await loadFile(entry,message.slot==='comparison'?'comparison':'primary');break;}
+      case 'checkUpdate':await checkUpdate();break;
       case 'document':documentInfo();break;
       case 'saveSettings':{const allowed=['categories','membership','theme','sort','density','intent'];const next={...settings};for(const key of allowed)if(Object.prototype.hasOwnProperty.call(message.values||{},key))next[key]=message.values[key];saveSettings(next);break;}
       case 'export':{if(typeof message.csv!=='string'||message.csv.length>32*1024*1024)throw Error('Invalid export data.');const dest=await fs.getFileForSaving('gamut-samples.csv',{types:['csv']});if(dest){await dest.write(message.csv);send('notice',{message:'Gamut samples exported.'});}break;}

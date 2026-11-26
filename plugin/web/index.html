@@ -1,29 +1,39 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; worker-src 'self' blob:; connect-src 'self'; img-src 'self' data: blob:"><title>ICC / Gamut Inspector</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="layout.css"></head>
 <body>
-<header><div><strong>ICC / Gamut Inspector</strong><small>Photoshop · self-contained</small></div><button id="settingsButton" title="Theme settings" aria-label="Theme settings">⚙</button></header>
-<div id="settings" hidden><label>Theme <select id="theme"><option value="system">Follow system</option><option value="dark">Dark</option><option value="light">Light</option></select></label></div>
-<nav role="tablist"><button id="inspectTab" role="tab" aria-selected="true">ICC / Gamut Inspector</button><button id="listTab" role="tab" aria-selected="false">Profile List</button></nav>
+<header>
+  <strong>ICC / Gamut Inspector</strong>
+  <button id="settingsButton" aria-label="Plugin settings" aria-expanded="false" aria-controls="settings">⚙</button>
+  <section id="settings" aria-label="Plugin settings" hidden>
+    <label>Theme <select id="theme"><option value="system">Follow system</option><option value="dark">Dark</option><option value="light">Light</option></select></label>
+    <button id="checkUpdate">Check for an Update</button>
+    <div id="updateStatus" role="status"></div>
+    <footer id="pluginVersion">Version unavailable</footer>
+  </section>
+</header>
+<nav role="tablist"><button id="inspectTab" role="tab" aria-selected="true">Gamut</button><button id="listTab" role="tab" aria-selected="false">Profile List</button></nav>
 <div id="notice" role="status" aria-live="polite">Open an ICC profile to inspect its device gamut.</div>
-<main id="inspectPage">
+<main id="inspectPage" tabindex="0" aria-label="Gamut inspector">
 <div class="toolbar"><button id="open">Open Profile</button><button id="compare">Compare Profile</button><button id="clearCompare">Clear comparison</button></div>
 <div class="document"><span id="documentInfo">No document information</span><button id="documentRefresh" title="Read current document profile">↻</button></div>
-<div class="toolbar controls"><label>Samples/channel <select id="density"><option>5</option><option selected>9</option><option>13</option><option>17</option><option>21</option></select></label><label>Intent <select id="intent"><option value="0">Perceptual</option><option value="1" selected>Relative colorimetric</option><option value="2">Saturation</option><option value="3">Absolute colorimetric</option></select></label></div>
+<div class="inspector-layout"><section class="gamut-pane" aria-label="Gamut viewer"><div class="toolbar controls"><label>Samples per channel <select id="density"><option>5</option><option selected>9</option><option>13</option><option>17</option><option>21</option></select></label><label>Intent <select id="intent"><option value="0">Perceptual</option><option value="1" selected>Relative colorimetric</option><option value="2">Saturation</option><option value="3">Absolute colorimetric</option></select></label></div>
 <div class="toolbar controls"><label>View <select id="renderMode"><option value="surface">Surface</option><option value="wire">Wireframe</option><option value="points">Points</option></select></label><label><input type="checkbox" id="xray" checked> X-ray comparison</label><button id="reset">Reset view</button><button id="export" disabled>Export CSV</button></div>
-<div class="inspector-layout"><section class="gamut-pane" aria-label="Gamut viewer"><div id="viewport" aria-label="Interactive 3D CIELAB gamut. Drag to orbit; scroll to zoom."></div>
+<div id="viewport" aria-label="Interactive 3D CIELAB gamut. Drag to orbit. Ctrl or Command plus scroll to zoom."></div>
 <div id="legend"><span id="primaryLegend">● Primary: none</span><span id="comparisonLegend">◇ Comparison: none</span></div>
 <p id="statistics" class="muted">D50 CIELAB · GPU rendering · convex hull approximation</p>
 </section><section class="profile-pane" aria-label="Profile data"><details open><summary>Profile information</summary><dl id="metadata"></dl></details>
-<details open><summary>ICC tags, curves, white point and LUTs</summary><div class="toolbar"><select id="tagSelect" aria-label="ICC tag"></select></div><canvas id="curve" width="640" height="220" hidden></canvas><pre id="tagDetails">Choose a profile.</pre></details></section></div>
+<details open><summary>ICC tags, curves, white point and LUTs</summary><div id="tagList" role="group" aria-label="ICC tags"></div><canvas id="curve" width="640" height="220" hidden></canvas><pre id="tagDetails">Choose a profile.</pre></details></section></div>
 </main>
-<main id="listPage" hidden>
+<main id="listPage" tabindex="0" aria-label="Profile list" hidden>
 <div class="toolbar"><button id="directory">Open Directory</button><label><input type="checkbox" id="makeDefault" checked> Make default</label><button id="refresh">Refresh</button></div>
 <p id="directoryPath" class="muted">Choose a profile directory. Photoshop requires your permission to access it.</p>
 <div class="toolbar"><input id="search" type="search" placeholder="Search filename, description, version or color space" aria-label="Search profiles"><button id="newCategory">Create category</button></div>
 <p class="muted">Select profiles with checkboxes, then create a category. Drag rows onto a category header to move them. Double-click a category name to rename it.</p>
 <div class="toolbar"><label>Sort <select id="sort"><option value="name">Filename</option><option value="version">Version</option><option value="colorSpace">Device color space</option><option value="created">Created</option></select></label><button id="sortDirection" title="Reverse sort">↑</button><span id="selectedCount">0 selected</span></div>
+<div class="toolbar"><label>Move to <select id="moveCategory"></select></label><button id="moveSelected" disabled>Move selected</button></div>
 <div id="profiles"></div>
 </main>
+<div id="profileTooltip" role="tooltip" hidden><strong></strong><dl></dl></div>
 <dialog id="categoryDialog"><form method="dialog"><h3 id="categoryTitle">Category</h3><input id="categoryName" maxlength="100" required aria-label="Category name"><p><button value="cancel" formnovalidate>Cancel</button><button id="categoryConfirm" value="ok">Save</button></p></form></dialog>
 <script type="module" src="app.mjs"></script>
 </body></html>

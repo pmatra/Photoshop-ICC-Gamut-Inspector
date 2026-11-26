@@ -8,10 +8,10 @@ A self-contained Adobe Photoshop UXP panel for inspecting ICC profiles and compa
 
 - Open RGB, CMYK and Gray ICC/ICM profiles; view header attributes and tag contents.
 - D50 Lab sampling through LittleCMS 2.20 compiled to WebAssembly, with all four ICC rendering intents. No Python, native helper, local server, CDN or account needed at runtime.
-- GPU 3D hull, wireframe and point views; orbit, zoom, high DPI rendering and reset.
+- GPU 3D hull, wireframe and point views. Drag the plot to orbit, hold Ctrl or Command while scrolling to zoom, and use Reset view to restore the camera.
 - Two-profile comparison with cyan X-ray wireframe and an explicit legend. The primary surface retains normal depth testing.
 - Full sampling and hull construction in a background worker, three-result cache, bounded display point count and redraws only when the view changes. CSV exports retain all samples.
-- Profile directory list with filename, version, color space and creation time; search, persistent sorting, checkboxes, categories, drag/drop, rename and category removal.
+- Compact profile directory list with filename, checkboxes, search, sorting, categories and drag/drop. Hover over a profile for two seconds to see its version, color space, creation time and description.
 - Real curve plots, XYZ white points, LUT channel/grid/matrix details and other tag payload information.
 - Read the active Photoshop document's assigned profile name without changing the document.
 - System font, shaded buttons and category headers, light/dark/system themes.
@@ -22,9 +22,9 @@ A self-contained Adobe Photoshop UXP panel for inspecting ICC profiles and compa
 1. Download and unpack the developer ZIP from a successful Actions run (or build from source).
 2. Install Adobe's **UXP Developer Tool** from Creative Cloud. Enable developer mode in Photoshop's Plugins preferences, then restart Photoshop if requested.
 3. In UXP Developer Tool, choose **Add Plugin**, select the unpacked `manifest.json`, then **Load**.
-4. Open **Plugins → ICC / Gamut Inspector**. The preferred floating workspace is 1440 × 1000, with a 900 × 700 minimum. Drag the panel tab out of its dock to float it, then resize using its window edge. Photoshop may retain a previous panel size after an update; unload/reload the plugin and enlarge the floating panel if necessary.
+4. Open **Plugins → ICC / Gamut Inspector**. The preferred floating workspace is 480 × 850, with a 360 × 520 minimum. Drag the panel tab out of its dock to float it, then resize using its window edge. Photoshop may retain a previous panel size after an update; unload/reload the plugin and enlarge the floating panel if necessary.
 
-The inspector places the 3D gamut and profile data side by side in the larger workspace. The profile list uses the full panel width, with wider attribute columns.
+The inspector stacks the 3D gamut and profile data in a narrow panel. At 850 pixels or wider, it places them side by side.
 
 The ZIP is an unpacked developer plugin, not a CCX installer. Adobe UXP Developer Tool can package a CCX; distributing through Adobe Marketplace additionally requires Adobe's plugin registration/review process. The manifest ID is a development identifier and must be replaced with an Adobe-issued plugin ID before Marketplace submission.
 
@@ -35,6 +35,8 @@ Choose **Profile List → Open Directory** and select the folder. Leave **Make d
 - Windows printer profiles: `C:\Windows\System32\spool\drivers\color`
 - macOS user profiles: `~/Library/ColorSync/Profiles`
 - macOS shared profiles: `/Library/ColorSync/Profiles`
+
+To organize profiles, check one or more rows, choose a category in **Move to**, and click **Move selected**. You can also select profiles before clicking **Create category** to put them directly into the new category.
 
 No ICC profiles from your computer are bundled or uploaded. Categories are virtual; moving/removing a category never moves or deletes files.
 

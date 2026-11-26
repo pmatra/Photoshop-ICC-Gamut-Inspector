@@ -1,37 +1,163 @@
-/* Keep the gamut and ICC data visible together in a floating workspace. */
-body{height:100vh;display:flex;flex-direction:column;overflow:hidden}
-body>header,body>nav,body>#notice,body>#settings{flex-shrink:0}
-#inspectPage{display:flex;flex-direction:column;flex:1;min-height:0}
-#inspectPage>.toolbar,#inspectPage>.document{flex-shrink:0}
-.inspector-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
-.inspector-layout{flex:1;min-height:0;align-items:stretch}
-.gamut-pane,.profile-pane{min-width:0;min-height:0}
-.gamut-pane{display:flex;flex-direction:column}
-#viewport{height:auto;min-height:250px;flex:1}
-#legend,#statistics{flex-shrink:0}
-.profile-pane{overflow:auto}
-.profile-pane details:first-child{margin-top:0}
-.profile-pane dl{grid-template-columns:110px minmax(0,1fr)}
-.profile-pane select{max-width:100%}
-.profile-pane pre{max-height:calc(100vh - 650px);min-height:130px}
-#listPage{padding:18px;flex:1;min-height:0;overflow:auto}
-.category table{font-size:13px}
-.category th,.category td{padding:10px 9px}
-.category th:first-child{width:38px}
-.category th:nth-child(3){width:85px}
-.category th:nth-child(4){width:125px}
-.category th:last-child{width:175px}
-.category th{white-space:nowrap}
-@media(max-width:1099px){
-  .inspector-layout{grid-template-columns:minmax(0,1fr) 300px;gap:12px}
-  .profile-pane dl{grid-template-columns:90px minmax(0,1fr)}
+body {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-@media(max-width:799px){
-  body{height:auto;display:block;overflow:auto}
-  #inspectPage{display:block}
-  .inspector-layout{grid-template-columns:minmax(0,1fr)}
-  #viewport{height:max(400px,55vh)}
-  .profile-pane pre{max-height:400px}
-  .category{overflow-x:auto}
-  .category table{min-width:720px}
+
+body > header, body > nav, #notice {
+  flex-shrink: 0;
+}
+
+main {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  overscroll-behavior-y: contain;
+}
+
+.inspector-layout {
+  display: grid;
+  gap: 12px;
+}
+
+.gamut-pane, .profile-pane {
+  min-width: 0;
+  min-height: 0;
+}
+
+.gamut-pane {
+  display: flex;
+  flex-direction: column;
+}
+
+#viewport {
+  position: relative;
+  flex-shrink: 0;
+  height: clamp(260px, 48vh, 460px);
+}
+
+#legend, #statistics, .gamut-pane > .controls {
+  flex-shrink: 0;
+}
+
+.profile-pane details:first-child {
+  margin-top: 0;
+}
+
+.profile-pane dl {
+  grid-template-columns: 100px minmax(0, 1fr);
+}
+
+.profile-pane select {
+  max-width: 100%;
+}
+
+.category th:first-child {
+  width: 34px;
+}
+
+.category tbody tr:focus-within {
+  background: var(--panel);
+}
+
+@media (min-width: 850px) {
+  .inspector-layout {
+    grid-template-columns: minmax(0, 1fr) clamp(280px, 25vw, 360px);
+    align-items: start;
+  }
+
+  #viewport {
+    height: clamp(300px, 65vh, 860px);
+  }
+}
+
+#viewport canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+header {
+  position: relative;
+  z-index: 3;
+}
+
+#settings {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 10px;
+  display: grid;
+  gap: 8px;
+  width: min(240px, calc(100vw - 20px));
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: 0 4px 16px #0005;
+}
+
+#updateStatus:empty {
+  display: none;
+}
+
+#updateStatus, #pluginVersion {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#pluginVersion {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+#tagList {
+  max-height: 152px;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+
+#tagList:empty {
+  display: none;
+}
+
+#tagList button {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+#tagList button[aria-pressed="true"] {
+  background: var(--button);
+  box-shadow: inset 3px 0 var(--accent);
+}
+
+#tagList button:focus-visible {
+  outline-offset: -2px;
+}
+
+main::-webkit-scrollbar, #tagList::-webkit-scrollbar {
+  width: 14px;
+}
+
+main::-webkit-scrollbar-track, #tagList::-webkit-scrollbar-track {
+  background: var(--panel);
+}
+
+main::-webkit-scrollbar-thumb, #tagList::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border: 3px solid var(--panel);
+  border-radius: 8px;
+}
+
+#moveCategory {
+  max-width: 215px;
 }

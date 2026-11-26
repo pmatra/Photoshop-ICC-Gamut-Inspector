@@ -29503,7 +29503,7 @@ var GamutViewer = class {
       onError(`WebGL unavailable: ${e.message}`);
       return;
     }
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio * 1.5, 3));
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.renderer.setClearColor(2106153);
     container.append(this.renderer.domElement);
     this.renderer.domElement.addEventListener("webglcontextlost", (e) => {
@@ -29513,6 +29513,10 @@ var GamutViewer = class {
     this.scene = new Scene();
     this.camera = new PerspectiveCamera(40, 1, 0.1, 2e3);
     this.camera.position.set(220, 160, 250);
+    const canvas = this.renderer.domElement;
+    canvas.addEventListener("wheel", (event) => {
+      if (!event.ctrlKey && !event.metaKey) event.stopImmediatePropagation();
+    }, { capture: true });
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = false;
     this.controls.addEventListener("change", () => this.draw());
@@ -29542,7 +29546,7 @@ var GamutViewer = class {
     if (!this.renderer) return;
     const w = this.container.clientWidth, h = this.container.clientHeight;
     if (!w || !h) return;
-    this.renderer.setSize(w, h);
+    this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.draw();
